@@ -14,7 +14,6 @@ cuda = True if torch.cuda.is_available() else False
 Tensor = torch.cuda.FloatTensor if cuda else torch.FloatTensor
 
 def read_txt(file_path, grid_res_x, grid_res_y, grid_res_z):
-    """Read a txt file and create a sdf grid with target_grid_res"""
     with open(file_path) as file:
         grid = Tensor(grid_res_x, grid_res_y, grid_res_z)
         for i in range(grid_res_x):
@@ -26,7 +25,13 @@ def read_txt(file_path, grid_res_x, grid_res_y, grid_res_z):
     return grid
 
 # Read a file and create a sdf grid with target_grid_res
-def read_sdf(file_path, target_grid_res, target_bounding_box_min, target_bounding_box_max, target_voxel_size):
+def read_sdf(
+    file_path, 
+    target_grid_res, 
+    target_bounding_box_min, 
+    target_bounding_box_max, 
+    target_voxel_size
+):
 
     with open(file_path) as file:  
         line = file.readline()
@@ -193,7 +198,7 @@ def grid_construction_sphere_small(grid_res, bounding_box_min, bounding_box_max)
     else:
         return grid
 
-
+# SDF gradient
 def get_grid_normal(grid, voxel_size, grid_res_x, grid_res_y, grid_res_z):
     
     # largest index
@@ -366,9 +371,12 @@ def differentiable_rendering_silhouette(grid, grid_res, image_res, camera):
     return generate_image(-2, -2, -2, 2, 2, 2, \
     4./(grid_res-1), grid_res, grid_res, grid_res, image_res, image_res, grid, camera, True)
 
-def generate_image(bounding_box_min_x, bounding_box_min_y, bounding_box_min_z, \
+def generate_image(
+    bounding_box_min_x, bounding_box_min_y, bounding_box_min_z, \
     bounding_box_max_x, bounding_box_max_y, bounding_box_max_z, \
-    voxel_size, grid_res_x, grid_res_y, grid_res_z, width, height, grid, camera, back, camera_list):
+    voxel_size, width, height, grid, camera, back, camera_list, \
+    grid_res_x, grid_res_y, grid_res_z
+):
 
     # Get normal vectors for points on the grid
     [grid_normal_x, grid_normal_y, grid_normal_z] = get_grid_normal(grid, voxel_size, grid_res_x, grid_res_y, grid_res_z)
@@ -495,10 +503,14 @@ def loss_fn(output, target, grid, voxel_size, grid_res_x, grid_res_y, grid_res_z
     
     image_loss = torch.sum(torch.abs(target - output)) #/ (width * height)
 
-    [grid_normal_x, grid_normal_y, grid_normal_z] = get_grid_normal(grid, voxel_size, grid_res_x, grid_res_y, grid_res_z)
-    sdf_loss = torch.sum(torch.abs(torch.pow(grid_normal_x[1:grid_res_x-1, 1:grid_res_y-1, 1:grid_res_z-1], 2)\
-                                 + torch.pow(grid_normal_y[1:grid_res_x-1, 1:grid_res_y-1, 1:grid_res_z-1], 2)\
-                                 + torch.pow(grid_normal_z[1:grid_res_x-1, 1:grid_res_y-1, 1:grid_res_z-1], 2) - 1)) #/ ((grid_res-1) * (grid_res-1) * (grid_res-1))
+    [grid_normal_x, grid_normal_y, grid_normal_z] = get_grid_normal(
+        grid, voxel_size, grid_res_x, grid_res_y, grid_res_z)
+    
+    sdf_loss = torch.sum(torch.abs(
+        torch.pow(grid_normal_x[1:grid_res_x-1, 1:grid_res_y-1, 1:grid_res_z-1], 2) + 
+        torch.pow(grid_normal_y[1:grid_res_x-1, 1:grid_res_y-1, 1:grid_res_z-1], 2) + 
+        torch.pow(grid_normal_z[1:grid_res_x-1, 1:grid_res_y-1, 1:grid_res_z-1], 2) - 1
+    )) #/ ((grid_res-1) * (grid_res-1) * (grid_res-1))
 
     return image_loss, sdf_loss
 
