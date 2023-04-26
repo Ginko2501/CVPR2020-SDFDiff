@@ -26,9 +26,11 @@ rec_loss = []
 num_rec_list = []
 num_print = 0
 
+# Device configuration
 cuda = True if torch.cuda.is_available() else False
 Tensor = torch.cuda.FloatTensor if cuda else torch.FloatTensor
 
+# Camera parameters
 camera_list = []
 angle = 0
 h = 3
@@ -37,12 +39,27 @@ for i in range(24):
     angle += math.pi / 12
 
 
-def generate_samples(test_loader, shape_encoder, shape_decoder, sketch_encoder, args):
+def generate_samples(
+    test_loader, 
+    shape_encoder, 
+    shape_decoder, 
+    sketch_encoder, args
+):
     with torch.no_grad():
 
         sketch, shape = next(iter(test_loader))
 
-        torchvision.utils.save_image(sketch[0], "./" + directory + "/sketch" + str(num_rec) + ".png", nrow=8, padding=2, normalize=False, range=None, scale_each=False, pad_value=0)
+        torchvision.utils.save_image(
+            sketch[0], 
+            "./" + directory + "/sketch" + str(num_rec) + ".png", 
+            nrow=8, 
+            padding=2, 
+            normalize=False, 
+            range=None, 
+            scale_each=False, 
+            pad_value=0
+        )
+        
         sketch_feature, _ = sketch_encoder(sketch)
         sketch_out = shape_decoder(sketch_feature)
         shape_feature = shape_encoder(shape)
@@ -52,9 +69,24 @@ def generate_samples(test_loader, shape_encoder, shape_decoder, sketch_encoder, 
         # print(out.shape[0])
         for i in range(18, 26):
             # self.fake_image[i,0,:,:] = differentiable_rendering(fake_sdf[i,0,:,:,:], self.fake_sdf.shape[-1], self.opt.crop_size, camera_list[self.index[i]])
-            images[i-18,0,:,:] = differentiable_rendering(sketch_out[0,0,:,:,:], sketch_out.shape[-1], args.image_res, camera_list[i])
-            images[i-10,0,:,:] = differentiable_rendering(shape_out[0,0,:,:,:], shape_out.shape[-1], args.image_res, camera_list[i])
-            images[i-2,0,:,:] = differentiable_rendering(shape[0,0,:,:,:], shape.shape[-1], args.image_res, camera_list[i])
+            images[i-18,0,:,:] = differentiable_rendering(
+                sketch_out[0,0,:,:,:], 
+                sketch_out.shape[-1], 
+                args.image_res, camera_list[i]
+            )
+            
+            images[i-10,0,:,:] = differentiable_rendering(
+                shape_out[0,0,:,:,:], 
+                shape_out.shape[-1], 
+                args.image_res, camera_list[i]
+            )
+            
+            images[i-2,0,:,:] = differentiable_rendering(
+                shape[0,0,:,:,:], 
+                shape.shape[-1], 
+                args.image_res, 
+                camera_list[i]
+            )
     return images
 
 

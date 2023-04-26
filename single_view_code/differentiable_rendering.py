@@ -9,11 +9,12 @@ import renderer
 import time
 import sys
 
+# Device configuration
 cuda = True if torch.cuda.is_available() else False
 Tensor = torch.cuda.FloatTensor if cuda else torch.FloatTensor
 
-
 def read_txt(file_path, grid_res_x, grid_res_y, grid_res_z):
+    """Read a txt file and create a sdf grid with target_grid_res"""
     with open(file_path) as file:
         grid = Tensor(grid_res_x, grid_res_y, grid_res_z)
         for i in range(grid_res_x):
